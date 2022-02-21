@@ -10,6 +10,7 @@
             this.Version = HttpVersionType.Http10;
             this.StatusCode = statusCode;
             this.Headers = new List<Header>();
+            this.Cookies = new List<ResponseCookie>();
             this.Body = body;
 
             if (body?.Length > 0)
@@ -23,6 +24,8 @@
         public HttpResponseCode StatusCode { get; set; }
 
         public IList<Header> Headers { get; set; }
+
+        public IList<ResponseCookie> Cookies { get; set; }
 
         public byte[] Body { get; set; }
 
@@ -41,6 +44,11 @@
             foreach (var header in this.Headers)
             {
                 responseAsString.Append(header.ToString() + HttpConstants.NewLine);
+            }
+
+            foreach (var cookie in Cookies)
+            {
+                responseAsString.Append("Set Cookie: " + cookie.ToString() + HttpConstants.NewLine);
             }
 
             responseAsString.Append(HttpConstants.NewLine);

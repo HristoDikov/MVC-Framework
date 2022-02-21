@@ -62,7 +62,13 @@
             byte[] stringContent = Encoding.UTF8.GetBytes(content);
             var response = new HttpResponse(HttpResponseCode.Ok, stringContent);
             response.Headers.Add(new Header("Server", "HristoServer/1.0"));
-            response.Headers.Add(new Header("Contnt-Type", "text/html"));
+            response.Headers.Add(new Header("Content-Type", "text/html"));
+            response.Cookies.Add(
+                new ResponseCookie("sid", Guid.NewGuid().ToString())
+                { 
+                    HttpOnly = true, 
+                    MaxAge = 3600
+                });
 
             byte[] responseBytes = Encoding.UTF8.GetBytes(response.ToString());
             //byte[] stringContent = Encoding.UTF8.GetBytes(content);
