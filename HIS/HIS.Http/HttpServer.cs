@@ -44,26 +44,35 @@
 
         private async Task ProcessClientAsync(TcpClient tcpClient)
         {
-            const string NewLine = "\r\n";
             using NetworkStream networkStream = tcpClient.GetStream();
             byte[] requestBytes = new byte[1000000]; // TODO: Use buffer
             int bytesRead = await networkStream.ReadAsync(requestBytes, 0, requestBytes.Length);
-            string request = Encoding.UTF8.GetString(requestBytes, 0, bytesRead);
-            byte[] fileContent = Encoding.UTF8.GetBytes("<h1>Hello, World!</h1>");
-            string headers = "HTTP/1.0 200 OK" + NewLine +
-                "Server: Hdikov/1.0" + NewLine + 
-                "Content-Type: text/html" + NewLine +
-                "COntent-Lenght: " + fileContent.Length + NewLine
-                + NewLine;
-            byte[] headersBytes = Encoding.UTF8.GetBytes(headers);
+            string requestAsString = Encoding.UTF8.GetString(requestBytes, 0, bytesRead);
+
+            var request = new HttpRequest(requestAsString);
+            string content = "<h1>random page</h1>";
+            if (request.Path == "/")
+            {
+                content = "<h1>home page</h1>";
+            }
+            else if (request.Path == "/users/login") 
+            {
+                content = "<h1>login page</h1>";
+            }
+            byte[] stringContent = Encoding.UTF8.GetBytes(content);
+            var response = new HttpResponse(HttpResponseCode.Ok, stringContent);
+            response.Headers.Add(new Header("Server", "HristoServer/1.0"));
+            response.Headers.Add(new Header("Contnt-Type", "text/html"));
+
+            byte[] responseBytes = Encoding.UTF8.GetBytes(response.ToString());
             //byte[] stringContent = Encoding.UTF8.GetBytes(content);
             //var response = new HttpResponse(HttpResponseCode.Ok, stringContent);
             //response.Headers.Add(new Header("Server", "SoftUniServer/1.0"));
             //response.Headers.Add(new Header("Content-Type", "text/html"));
 
             //byte[] responseBytes = Encoding.UTF8.GetBytes(response.ToString());
-            await networkStream.WriteAsync(headersBytes, 0, headersBytes.Length);
-            await networkStream.WriteAsync(fileContent, 0, fileContent.Length);
+            await networkStream.WriteAsync(responseBytes, 0, responseBytes.Length);
+            await networkStream.WriteAsync(response.Body, 0, response.Body.Length);
 
             Console.WriteLine(request);
             Console.WriteLine(new string('=', 60));
