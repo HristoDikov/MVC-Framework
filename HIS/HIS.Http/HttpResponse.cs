@@ -48,7 +48,7 @@
 
             foreach (var cookie in Cookies)
             {
-                responseAsString.Append("Set Cookie: " + cookie.ToString() + HttpConstants.NewLine);
+                responseAsString.Append("Set-Cookie: " + cookie.ToString() + HttpConstants.NewLine);
             }
 
             responseAsString.Append(HttpConstants.NewLine);
