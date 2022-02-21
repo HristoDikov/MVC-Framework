@@ -11,6 +11,7 @@
         {
             this.Path = "/";
             this.SameSite = SameSiteType.None;
+            this.Secure = true;
             this.Expires = DateTime.UtcNow.AddDays(30);
         }
 
@@ -57,12 +58,12 @@
 
             if (this.Secure == true)
             {
-                cookieBuilder.Append($"; Secure=");
+                cookieBuilder.Append($"; Secure");
             }
 
             if (this.HttpOnly == true)
             {
-                cookieBuilder.Append($"; HttpOnly=");
+                cookieBuilder.Append($"; HttpOnly");
             }
 
             cookieBuilder.Append("; SameSite=" + this.SameSite.ToString());
