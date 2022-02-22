@@ -6,17 +6,23 @@
     public class HttpResponse
     {
         public HttpResponse(HttpResponseCode statusCode, byte[] body)
+            : this()
         {
             this.Version = HttpVersionType.Http10;
             this.StatusCode = statusCode;
-            this.Headers = new List<Header>();
-            this.Cookies = new List<ResponseCookie>();
+          
             this.Body = body;
 
             if (body?.Length > 0)
             {
                 this.Headers.Add(new Header("Content-Lenght", body.Length.ToString()));
             }
+        }
+
+        internal HttpResponse() 
+        {
+            this.Headers = new List<Header>();
+            this.Cookies = new List<ResponseCookie>();
         }
 
         public HttpVersionType Version { get; set; }

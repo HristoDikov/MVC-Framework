@@ -1,6 +1,8 @@
 ﻿namespace HIS.Http
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Sockets;
     using System.Text;
@@ -9,10 +11,13 @@
     public class HttpServer : IHttpServer
     {
         private readonly TcpListener tcpListener;
+        private readonly IList<Route> routeTable;     
+
         //Todo: actions
-        public HttpServer(int port)
+        public HttpServer(int port, IList<Route> routeTable)
         {
             this.tcpListener = new TcpListener(IPAddress.Loopback, port);
+            this.routeTable = routeTable;
         }
 
         public async Task ResetAsync()
@@ -53,19 +58,24 @@
                 string requestAsString = Encoding.UTF8.GetString(requestBytes, 0, bytesRead);
 
                 var request = new HttpRequest(requestAsString);
-                string content = "<h1>random page</h1>";
-                if (request.Path == "/")
+                Console.WriteLine($"{request.Method} - {request.Path}");
+
+                var route = this.routeTable
+                    .FirstOrDefault(x => x.HttpMethod == request.Method && x.Path == request.Path);
+
+                HttpResponse response;
+
+                if (route == null)
                 {
-                    content = "<h1>home page</h1>";
+                    response = new HttpResponse(HttpResponseCode.NotFound, new byte[0]);
                 }
-                else if (request.Path == "/users/login")
+                else
                 {
-                    content = "<h1>login page</h1>";
+                    response = route.Action(request);
                 }
-                byte[] stringContent = Encoding.UTF8.GetBytes(content);
-                var response = new HttpResponse(HttpResponseCode.Ok, stringContent);
+
+
                 response.Headers.Add(new Header("Server", "HristoServer/1.0"));
-                response.Headers.Add(new Header("Content-Type", "text/html"));
                 response.Cookies.Add(
                     new ResponseCookie("sid", Guid.NewGuid().ToString())
                     {
@@ -77,8 +87,6 @@
                 await networkStream.WriteAsync(responseBytes, 0, responseBytes.Length);
                 await networkStream.WriteAsync(response.Body, 0, response.Body.Length);
 
-                Console.WriteLine(request);
-                Console.WriteLine(new string('=', 60));
             }
             catch (Exception ex)
             {
