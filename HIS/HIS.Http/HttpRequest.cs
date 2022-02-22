@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Text;
 
     public class HttpRequest
@@ -107,6 +106,8 @@
         public IList<Cookie> Cookies{ get; set; }
 
         public string Body { get; set; }
-     }
+
+        public IDictionary<string, string> SessionData { get; set; }
+    }
 
 }

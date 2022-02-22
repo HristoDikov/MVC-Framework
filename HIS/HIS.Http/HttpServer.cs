@@ -11,13 +11,15 @@
     public class HttpServer : IHttpServer
     {
         private readonly TcpListener tcpListener;
-        private readonly IList<Route> routeTable;     
+        private readonly IList<Route> routeTable;
+        private readonly IDictionary<string, IDictionary<string, string>> sessions;
 
         //Todo: actions
         public HttpServer(int port, IList<Route> routeTable)
         {
             this.tcpListener = new TcpListener(IPAddress.Loopback, port);
             this.routeTable = routeTable;
+            this.sessions = new Dictionary<string, IDictionary<string, string>>();
         }
 
         public async Task ResetAsync()
@@ -58,6 +60,20 @@
                 string requestAsString = Encoding.UTF8.GetString(requestBytes, 0, bytesRead);
 
                 var request = new HttpRequest(requestAsString);
+                string newSessionId = null;
+                var sessionCookie = request.Cookies.FirstOrDefault(x => x.Name == HttpConstants.SessionIdCookieName);
+
+                if (sessionCookie != null && this.sessions.ContainsKey(sessionCookie.Value))
+                {
+                    request.SessionData = this.sessions[sessionCookie.Value];
+                }
+                else
+                {
+                    newSessionId = Guid.NewGuid().ToString();
+                    var dict = new Dictionary<string, string>();
+                    this.sessions.Add(newSessionId, dict);
+                    request.SessionData = dict;
+                }
                 Console.WriteLine($"{request.Method} - {request.Path}");
 
                 var route = this.routeTable
@@ -74,14 +90,16 @@
                     response = route.Action(request);
                 }
 
-
                 response.Headers.Add(new Header("Server", "HristoServer/1.0"));
-                response.Cookies.Add(
-                    new ResponseCookie("sid", Guid.NewGuid().ToString())
+
+                if (newSessionId != null)
+                {
+                    response.Cookies.Add(new ResponseCookie(HttpConstants.SessionIdCookieName, newSessionId)
                     {
                         HttpOnly = true,
                         MaxAge = 3600
                     });
+                }
 
                 byte[] responseBytes = Encoding.UTF8.GetBytes(response.ToString());
                 await networkStream.WriteAsync(responseBytes, 0, responseBytes.Length);

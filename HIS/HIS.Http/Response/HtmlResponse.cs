@@ -12,7 +12,6 @@ namespace HIS.Http.Response
             this.Body = byteData;
             this.Headers.Add(new Header("Content-Type", "text/html"));
             this.Headers.Add(new Header("Content-Lenght", this.Body.Length.ToString()));
-
         }
     }
 }
